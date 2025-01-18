@@ -1,3 +1,5 @@
+//lib/screens/main_screen.dart
+
 import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'camera_screen.dart';

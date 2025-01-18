@@ -1,3 +1,5 @@
+//lib/widgets/reward_card.dart
+
 import 'package:flutter/material.dart';
 import '../models/reward.dart';
 import 'package:logging/logging.dart';
