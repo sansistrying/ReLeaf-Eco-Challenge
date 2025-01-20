@@ -1,4 +1,3 @@
-// lib/models/eco_action.dart
 import 'package:flutter/material.dart';
 
 @immutable
@@ -16,9 +15,9 @@ class EcoAction {
   final Map<String, dynamic> additionalData;
   final Color? color;
   final String? imageUrl;
-  final int difficulty; // 1-5 scale
+  final int difficulty;
 
-  const EcoAction({
+  EcoAction({
     required this.id,
     required this.title,
     required this.description,
@@ -33,7 +32,7 @@ class EcoAction {
     this.color,
     this.imageUrl,
     this.difficulty = 1,
-  }) : this.createdAt = createdAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now();
 
   EcoAction copyWith({
     String? id,

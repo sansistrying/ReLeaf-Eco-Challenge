@@ -1,8 +1,6 @@
 // lib/screens/home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:shimmer/shimmer.dart';
 import '../widgets/eco_action_card.dart';
 import '../widgets/leaderboard_card.dart';
 import '../models/eco_action.dart';
@@ -37,7 +35,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadData() async {
-    // Simulate data loading
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() {
@@ -80,8 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 24),
                     _buildLeaderboardSection(),
                   ].animate(interval: const Duration(milliseconds: 100))
-                   .fadeIn()
-                   .slideX(),
+                      .fadeIn()
+                      .slideX(),
                 ),
               ),
             ),
@@ -93,20 +90,19 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildAppBar(BuildContext context) {
-    final theme = Theme.of(context);
     return SliverAppBar(
       expandedHeight: 200,
       floating: false,
       pinned: true,
       stretch: true,
-      backgroundColor: theme.colorScheme.primary,
+      backgroundColor: Theme.of(context).colorScheme.primary,
       flexibleSpace: FlexibleSpaceBar(
         title: Text(
           _scrollOffset > 130 ? 'ReLeaf' : '',
-          style: theme.textTheme.headlineMedium?.copyWith(
-            color: Colors.white,
-            fontSize: 20,
-          ),
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                color: Colors.white,
+                fontSize: 20,
+              ),
         ),
         background: Stack(
           fit: StackFit.expand,
@@ -122,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    theme.colorScheme.primary.withOpacity(0.7),
+                    Theme.of(context).colorScheme.primary.withAlpha(178),
                   ],
                 ),
               ),
@@ -161,8 +157,8 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           DateFormat('EEEE, MMMM d').format(DateTime.now()),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-          ),
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
+              ),
         ),
       ],
     );
@@ -212,41 +208,31 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildImpactStats(BuildContext context) {
-    return StaggeredGrid.count(
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
       mainAxisSpacing: 8,
       crossAxisSpacing: 8,
       children: [
-        StaggeredGridTile.count(
-          crossAxisCellCount: 1,
-          mainAxisCellCount: 1,
-          child: StatsCard(
-            title: 'Carbon Offset',
-            value: '2,500 kg',
-            icon: Icons.eco,
-            color: Colors.green,
-          ),
+        StatsCard(
+          title: 'Carbon Offset',
+          value: '2,500 kg',
+          icon: Icons.eco,
+          color: Colors.green,
         ),
-        StaggeredGridTile.count(
-          crossAxisCellCount: 1,
-          mainAxisCellCount: 1,
-          child: StatsCard(
-            title: 'Trees Planted',
-            value: '150',
-            icon: Icons.park,
-            color: Colors.brown,
-          ),
+        StatsCard(
+          title: 'Trees Planted',
+          value: '150',
+          icon: Icons.park,
+          color: Colors.brown,
         ),
-        StaggeredGridTile.count(
-          crossAxisCellCount: 2,
-          mainAxisCellCount: 1,
-          child: StatsCard(
-            title: 'Total Points',
-            value: '5,000',
-            icon: Icons.stars,
-            color: Colors.amber,
-            isWide: true,
-          ),
+        StatsCard(
+          title: 'Total Points',
+          value: '5,000',
+          icon: Icons.stars,
+          color: Colors.amber,
+          isWide: true,
         ),
       ],
     );
@@ -291,7 +277,24 @@ class _HomeScreenState extends State<HomeScreen> {
         category: 'Planting',
         difficulty: 2,
       ),
-      // Add more actions...
+      EcoAction(
+        id: '2',
+        title: 'Recycle Electronics',
+        description: 'Properly dispose of old electronics',
+        points: 50,
+        icon: Icons.phone_android,
+        category: 'Recycling',
+        difficulty: 1,
+      ),
+      EcoAction(
+        id: '3',
+        title: 'Use Public Transport',
+        description: 'Commute using public transportation',
+        points: 30,
+        icon: Icons.directions_bus,
+        category: 'Transportation',
+        difficulty: 1,
+      ),
     ];
 
     return ListView.builder(
@@ -307,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Implement action details
             },
           ),
-        );
+        ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
       },
     );
   }
@@ -324,12 +327,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: Theme.of(context).textTheme.headlineSmall,
         ),
         const SizedBox(height: 16),
-        LeaderboardCard(
-          topUsers: _getDummyUsers(),
-          onTap: (User user) {
-            // Implement user profile view
-          },
-        ),
+        LeaderboardCard(topUsers: _getDummyUsers()),
       ],
     );
   }
@@ -351,31 +349,66 @@ class _HomeScreenState extends State<HomeScreen> {
         preferences: const UserPreferences(),
         joinDate: DateTime.now().subtract(const Duration(days: 100)),
       ),
-      // Add more users...
+      User(
+        id: '2',
+        name: 'Bob Smith',
+        email: 'bob@example.com',
+        points: 1100,
+        avatar: 'assets/images/avatar2.png',
+        level: UserLevel(
+          level: 4,
+          currentXP: 300,
+          requiredXP: 1000,
+          title: 'Nature Guardian',
+        ),
+        preferences: const UserPreferences(),
+        joinDate: DateTime.now().subtract(const Duration(days: 90)),
+      ),
+      User(
+        id: '3',
+        name: 'Charlie Brown',
+        email: 'charlie@example.com',
+        points: 1000,
+        avatar: 'assets/images/avatar3.png',
+        level: UserLevel(
+          level: 4,
+          currentXP: 200,
+          requiredXP: 1000,
+          title: 'Earth Protector',
+        ),
+        preferences: const UserPreferences(),
+        joinDate: DateTime.now().subtract(const Duration(days: 80)),
+      ),
     ];
   }
 
   Widget _buildShimmerLoading() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+    return Container(
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
             width: 200,
             height: 24,
-            color: Colors.white,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
           const SizedBox(height: 8),
           Container(
             width: 150,
             height: 16,
-            color: Colors.white,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
           ),
         ],
       ),
-    );
+    ).animate(onPlay: (controller) => controller.repeat())
+        .shimmer(duration: const Duration(seconds: 1));
   }
 
   Widget _buildFloatingActionButton() {
@@ -383,9 +416,8 @@ class _HomeScreenState extends State<HomeScreen> {
       onPressed: () {
         // Implement quick action
       },
-      label: const Text('Quick Action'),
       icon: const Icon(Icons.add_photo_alternate),
-    ).animate()
-      .scale(delay: const Duration(milliseconds: 500));
+      label: const Text('Quick Action'),
+    ).animate().scale(delay: const Duration(milliseconds: 500));
   }
 }

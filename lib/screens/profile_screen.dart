@@ -4,7 +4,6 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/achievement_card.dart';
 import '../models/achievement.dart';
 import '../widgets/animated_progress_bar.dart';
-import 'package:shimmer/shimmer.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -13,7 +12,7 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> 
+class _ProfileScreenState extends State<ProfileScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   bool _isLoading = true;
@@ -26,7 +25,6 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadData() async {
-    // Simulate data loading
     await Future.delayed(const Duration(seconds: 2));
     if (mounted) {
       setState(() {
@@ -77,7 +75,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Theme.of(context).colorScheme.background,
+                    Theme.of(context).colorScheme.surface,
                   ],
                 ),
               ),
@@ -101,8 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen>
       ],
     );
   }
-
-// Continuing lib/screens/profile_screen.dart...
 
   Widget _buildProfileContent(BuildContext context) {
     return Column(
@@ -169,8 +165,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           Text(
             'Eco Warrior Level 5',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-            ),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
           ).animate().fadeIn(),
           const SizedBox(height: 8),
           Row(
@@ -195,8 +191,8 @@ class _ProfileScreenState extends State<ProfileScreen>
           Text(
             value,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+                  fontWeight: FontWeight.bold,
+                ),
           ),
           Text(
             label,
@@ -211,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     return Container(
       height: 24,
       width: 1,
-      color: Colors.grey.withOpacity(0.3),
+      color: Colors.grey.withAlpha(77),
       margin: const EdgeInsets.symmetric(horizontal: 8),
     );
   }
@@ -262,7 +258,7 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Widget _buildTabContent(BuildContext context) {
     return SizedBox(
-      height: 500, // Adjust based on your needs
+      height: 500,
       child: TabBarView(
         controller: _tabController,
         children: [
@@ -295,7 +291,6 @@ class _ProfileScreenState extends State<ProfileScreen>
         progressRequired: 100,
         currentProgress: 75,
       ),
-      // Add more achievements...
     ];
 
     return ListView.builder(
@@ -332,8 +327,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 color: Theme.of(context).colorScheme.primary,
               ),
             ),
-            title: Text('Planted a tree'),
-            subtitle: Text('2 days ago'),
+            title: const Text('Planted a tree'),
+            subtitle: const Text('2 days ago'),
             trailing: Text(
               '+100 pts',
               style: TextStyle(
@@ -405,48 +400,31 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildShimmerLoading() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
+    return Container(
+      padding: const EdgeInsets.all(16),
       child: Column(
-        children: List.generate(
-          3,
-          (index) => Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        height: 16,
-                        color: Colors.white,
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        width: 100,
-                        height: 12,
-                        color: Colors.white,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 200,
+            height: 24,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
             ),
           ),
-        ),
+          const SizedBox(height: 8),
+          Container(
+            width: 150,
+            height: 16,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
       ),
-    );
+    ).animate(onPlay: (controller) => controller.repeat())
+        .shimmer(duration: const Duration(seconds: 1));
   }
 }

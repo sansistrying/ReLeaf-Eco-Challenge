@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/reward_card.dart';
 import '../models/reward.dart';
-import 'package:shimmer/shimmer.dart';
 import '../widgets/animated_progress_bar.dart';
 
 class RewardsScreen extends StatefulWidget {
@@ -16,7 +15,41 @@ class RewardsScreen extends StatefulWidget {
 class _RewardsScreenState extends State<RewardsScreen> {
   bool _isLoading = true;
   String _selectedCategory = 'All';
-  final List<String> _categories = ['All', 'Eco Products', 'Vouchers', 'Experiences', 'Donations'];
+  final List<String> _categories = const [
+    'All',
+    'Eco Products',
+    'Vouchers',
+    'Experiences',
+    'Donations'
+  ];
+
+  // Moved rewards to be non-const due to DateTime values
+  final List<Reward> _rewards = [
+    Reward(
+      id: '1',
+      title: 'Eco-friendly Water Bottle',
+      description: 'Reusable water bottle made from recycled materials',
+      points: 500,
+      image: 'assets/images/water_bottle.jpg',
+      category: 'Eco Products',
+    ),
+    Reward(
+      id: '2',
+      title: 'Organic Cotton T-shirt',
+      description: 'Comfortable t-shirt made from 100% organic cotton',
+      points: 750,
+      image: 'assets/images/tshirt.jpg',
+      category: 'Eco Products',
+    ),
+    Reward(
+      id: '3',
+      title: 'Solar Power Bank',
+      description: 'Charge your devices using solar energy',
+      points: 1000,
+      image: 'assets/images/power_bank.jpg',
+      category: 'Eco Products',
+    ),
+  ];
 
   @override
   void initState() {
@@ -72,8 +105,8 @@ class _RewardsScreenState extends State<RewardsScreen> {
         title: Text(
           'Rewards',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            color: Colors.white,
-          ),
+                color: Colors.white,
+              ),
         ),
         background: Stack(
           fit: StackFit.expand,
@@ -89,7 +122,7 @@ class _RewardsScreenState extends State<RewardsScreen> {
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                    Theme.of(context).colorScheme.primary.withAlpha(204),
                   ],
                 ),
               ),
@@ -135,9 +168,9 @@ class _RewardsScreenState extends State<RewardsScreen> {
                     Text(
                       '1,500',
                       style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
                   ],
                 ),
@@ -207,20 +240,9 @@ class _RewardsScreenState extends State<RewardsScreen> {
       return SliverToBoxAdapter(child: _buildShimmerLoading());
     }
 
-    final rewards = [
-      Reward(
-        id: '1',
-        title: 'Eco-friendly Water Bottle',
-        description: 'Reusable water bottle made from recycled materials',
-        points: 500,
-        image: 'assets/images/water_bottle.jpg',
-        category: 'Eco Products',
-        brandName: 'EcoLife',
-        originalPrice: 29.99,
-        discountedPrice: 19.99,
-      ),
-      // Add more rewards...
-    ];
+    final filteredRewards = _selectedCategory == 'All'
+        ? _rewards
+        : _rewards.where((r) => r.category == _selectedCategory).toList();
 
     return SliverPadding(
       padding: const EdgeInsets.all(16),
@@ -233,43 +255,45 @@ class _RewardsScreenState extends State<RewardsScreen> {
         ),
         delegate: SliverChildBuilderDelegate(
           (context, index) {
-            final reward = rewards[index % rewards.length];
+            final reward = filteredRewards[index % filteredRewards.length];
             return RewardCard(
               reward: reward,
               onTap: () => _showRewardDetails(context, reward),
             ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
           },
-          childCount: 10, // Adjust based on your needs
+          childCount: filteredRewards.length,
         ),
       ),
     );
   }
 
   Widget _buildShimmerLoading() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          childAspectRatio: 0.75,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-        ),
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          return Container(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 200,
+            height: 24,
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
             ),
-          );
-        },
+          ),
+          const SizedBox(height: 8),
+          Container(
+            width: 150,
+            height: 16,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(4),
+            ),
+          ),
+        ],
       ),
-    );
+    ).animate(onPlay: (controller) => controller.repeat())
+        .shimmer(duration: const Duration(seconds: 1));
   }
 
   void _showFilterDialog(BuildContext context) {
@@ -337,14 +361,12 @@ class RewardSearchDelegate extends SearchDelegate {
 
   @override
   Widget buildResults(BuildContext context) {
-    // Implement search results
-    return Container();
+    return Container(); // Implement search results
   }
 
   @override
   Widget buildSuggestions(BuildContext context) {
-    // Implement search suggestions
-    return Container();
+    return Container(); // Implement search suggestions
   }
 }
 
@@ -372,7 +394,33 @@ class _RewardDetailsSheet extends StatelessWidget {
             controller: scrollController,
             padding: const EdgeInsets.all(16),
             children: [
-              // Add reward details UI here
+              ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Image.asset(
+                  reward.image,
+                  height: 200,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                reward.title,
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                reward.description,
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton(
+                onPressed: () {
+                  // Implement reward redemption
+                  Navigator.pop(context);
+                },
+                child: Text('Redeem for ${reward.points} Points'),
+              ),
             ],
           ),
         );

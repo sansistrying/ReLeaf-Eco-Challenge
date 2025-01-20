@@ -4,8 +4,6 @@ import 'package:camera/camera.dart';
 import 'dart:io';
 import 'preview_screen.dart';
 import 'package:logging/logging.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:image_picker/image_picker.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({Key? key}) : super(key: key);
@@ -21,8 +19,8 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
   double _currentZoomLevel = 1.0;
   double _baseZoomLevel = 1.0;
   final Logger _logger = Logger('CameraScreen');
-  bool _isFlashOn = false;
   bool _hasPermission = false;
+  bool _isFlashOn = false;
   final double _minZoomLevel = 1.0;
   final double _maxZoomLevel = 5.0;
 
@@ -30,23 +28,31 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkPermissions();
+    _initializeCamera();
   }
 
-  Future<void> _checkPermissions() async {
-    final status = await Permission.camera.request();
-    setState(() {
-      _hasPermission = status.isGranted;
-    });
-    if (_hasPermission) {
-      await onNewCameraSelected();
+  Future<void> _initializeCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        _logger.warning('No cameras available');
+        setState(() => _hasPermission = false);
+        return;
+      }
+
+      setState(() => _hasPermission = true);
+      await onNewCameraSelected(cameras);
+    } catch (e) {
+      _logger.severe('Error initializing camera: $e');
+      setState(() => _hasPermission = false);
+      _showErrorDialog('Camera Error', 'Failed to initialize camera');
     }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -61,59 +67,36 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
     if (state == AppLifecycleState.inactive) {
       cameraController.dispose();
     } else if (state == AppLifecycleState.resumed) {
-      onNewCameraSelected();
+      _initializeCamera();
     }
   }
 
-  Future<void> onNewCameraSelected() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) {
-      _logger.warning('No cameras available');
-      return;
+  Future<void> onNewCameraSelected(List<CameraDescription> cameras) async {
+    final CameraController? oldController = _controller;
+    if (oldController != null) {
+      _controller = null;
+      await oldController.dispose();
     }
 
-    final newController = CameraController(
+    final CameraController newController = CameraController(
       _isRearCameraSelected ? cameras.first : cameras.last,
       ResolutionPreset.max,
       imageFormatGroup: ImageFormatGroup.jpeg,
       enableAudio: false,
     );
 
-    if (_controller != null) {
-      await _controller!.dispose();
-    }
-
     try {
       await newController.initialize();
       await newController.setFlashMode(FlashMode.off);
       await newController.setZoomLevel(_currentZoomLevel);
-    } on CameraException catch (e) {
-      _logger.warning('Error initializing camera: $e');
-      _showErrorDialog('Camera Error', 'Failed to initialize camera');
-      return;
-    }
 
-    if (mounted) {
       setState(() {
         _controller = newController;
-        _isCameraInitialized = _controller!.value.isInitialized;
+        _isCameraInitialized = true;
       });
-    }
-  }
-
-  Future<void> _pickFromGallery() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (image != null && mounted) {
-      await Navigator.of(context).push(
-        MaterialPageRoute(
-          builder: (context) => PreviewScreen(
-            imageFile: File(image.path),
-            fileList: const [],
-          ),
-        ),
-      );
+    } on CameraException catch (e) {
+      _logger.severe('Error initializing camera: $e');
+      _showErrorDialog('Camera Error', 'Failed to initialize camera');
     }
   }
 
@@ -140,6 +123,7 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
     }
 
     return Scaffold(
+      backgroundColor: Colors.black,
       body: SafeArea(
         child: Stack(
           children: [
@@ -159,13 +143,25 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.camera_off, size: 64),
+            const Icon(Icons.no_photography, size: 64),
             const SizedBox(height: 16),
-            const Text('Camera permission is required'),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _checkPermissions,
-              child: const Text('Grant Permission'),
+            const Text(
+              'Camera Access Required',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Please enable camera access to continue',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _initializeCamera,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
             ),
           ],
         ),
@@ -174,24 +170,28 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
   }
 
   Widget _buildCameraPreview() {
-    if (!_isCameraInitialized) {
-      return const Center(child: CircularProgressIndicator());
+    if (!_isCameraInitialized || _controller == null) {
+      return const Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      );
     }
+
     return GestureDetector(
       onScaleStart: (details) {
         _baseZoomLevel = _currentZoomLevel;
       },
       onScaleUpdate: (details) {
+        if (_controller == null) return;
+
         setState(() {
           _currentZoomLevel = (_baseZoomLevel * details.scale)
               .clamp(_minZoomLevel, _maxZoomLevel);
-          _controller?.setZoomLevel(_currentZoomLevel);
+          _controller!.setZoomLevel(_currentZoomLevel);
         });
       },
-      child: AspectRatio(
-        aspectRatio: 1 / _controller!.value.aspectRatio,
-        child: _controller!.buildPreview(),
-      ),
+      child: CameraPreview(_controller!),
     );
   }
 
@@ -207,23 +207,28 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
             icon: Icon(
               _isFlashOn ? Icons.flash_on : Icons.flash_off,
               color: Colors.white,
+              size: 28,
             ),
             onPressed: () async {
+              if (_controller == null) return;
               setState(() => _isFlashOn = !_isFlashOn);
-              await _controller?.setFlashMode(
+              await _controller!.setFlashMode(
                 _isFlashOn ? FlashMode.torch : FlashMode.off,
               );
             },
           ),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: Colors.black54,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
               '${_currentZoomLevel.toStringAsFixed(1)}x',
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
             ),
           ),
         ],
@@ -248,10 +253,13 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
             value: _currentZoomLevel,
             min: _minZoomLevel,
             max: _maxZoomLevel,
+            activeColor: Colors.white,
+            inactiveColor: Colors.white30,
             onChanged: (value) {
+              if (_controller == null) return;
               setState(() {
                 _currentZoomLevel = value;
-                _controller?.setZoomLevel(value);
+                _controller!.setZoomLevel(value);
               });
             },
           ),
@@ -273,11 +281,17 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
-              icon: const Icon(Icons.image, color: Colors.white, size: 32),
-              onPressed: _pickFromGallery,
+              icon: const Icon(
+                Icons.photo_library,
+                color: Colors.white,
+                size: 32,
+              ),
+              onPressed: () {
+                // Implement gallery picker
+              },
             ),
             GestureDetector(
-              onTap: takePicture,
+              onTap: _takePicture,
               child: Container(
                 height: 80,
                 width: 80,
@@ -296,13 +310,16 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
             ),
             IconButton(
               icon: Icon(
-                _isRearCameraSelected ? Icons.camera_front : Icons.camera_rear,
+                _isRearCameraSelected
+                    ? Icons.camera_front
+                    : Icons.camera_rear,
                 color: Colors.white,
                 size: 32,
               ),
-              onPressed: () {
+              onPressed: () async {
                 setState(() => _isRearCameraSelected = !_isRearCameraSelected);
-                onNewCameraSelected();
+                final cameras = await availableCameras();
+                await onNewCameraSelected(cameras);
               },
             ),
           ],
@@ -311,26 +328,31 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
     );
   }
 
-  Future<void> takePicture() async {
+  Future<void> _takePicture() async {
     final CameraController? cameraController = _controller;
-    if (!mounted || cameraController == null || !cameraController.value.isInitialized) {
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      _showErrorDialog('Error', 'Camera is not ready');
+      return;
+    }
+
+    if (cameraController.value.isTakingPicture) {
       return;
     }
 
     try {
-      final XFile file = await cameraController.takePicture();
+      final XFile photo = await cameraController.takePicture();
       if (!mounted) return;
 
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => PreviewScreen(
-            imageFile: File(file.path),
+            imageFile: File(photo.path),
             fileList: const [],
           ),
         ),
       );
     } on CameraException catch (e) {
-      _logger.warning('Error occurred while taking picture: $e');
+      _logger.severe('Error taking picture: $e');
       _showErrorDialog('Camera Error', 'Failed to capture image');
     }
   }

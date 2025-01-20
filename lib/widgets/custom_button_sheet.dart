@@ -6,6 +6,13 @@ class CustomBottomSheet extends StatelessWidget {
   final List<Widget> children;
   final VoidCallback? onClose;
   final Widget? action;
+  final double initialChildSize;
+  final double minChildSize;
+  final double maxChildSize;
+  final bool isDismissible;
+  final bool enableDrag;
+  final Color? backgroundColor;
+  final BorderRadius? borderRadius;
 
   const CustomBottomSheet({
     Key? key,
@@ -13,14 +20,23 @@ class CustomBottomSheet extends StatelessWidget {
     required this.children,
     this.onClose,
     this.action,
+    this.initialChildSize = 0.9,
+    this.minChildSize = 0.5,
+    this.maxChildSize = 0.95,
+    this.isDismissible = true,
+    this.enableDrag = true,
+    this.backgroundColor,
+    this.borderRadius,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        color: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: borderRadius ?? const BorderRadius.vertical(
+          top: Radius.circular(20),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -46,7 +62,7 @@ class CustomBottomSheet extends StatelessWidget {
         width: 40,
         height: 4,
         decoration: BoxDecoration(
-          color: Colors.grey[300],
+          color: Theme.of(context).dividerColor,
           borderRadius: BorderRadius.circular(2),
         ),
       ),
@@ -59,9 +75,12 @@ class CustomBottomSheet extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleLarge,
+          Expanded(
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           Row(
             children: [
@@ -77,106 +96,121 @@ class CustomBottomSheet extends StatelessWidget {
       ),
     );
   }
-}
 
-// lib/widgets/loading_overlay.dart
-import 'package:flutter/material.dart';
-
-class LoadingOverlay extends StatelessWidget {
-  final Widget child;
-  final bool isLoading;
-  final String? message;
-
-  const LoadingOverlay({
-    Key? key,
-    required this.child,
-    required this.isLoading,
-    this.message,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        if (isLoading)
-          Container(
-            color: Colors.black54,
-            child: Center(
-              child: Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const CircularProgressIndicator(),
-                      if (message != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          message!,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// lib/widgets/error_view.dart
-import 'package:flutter/material.dart';
-
-class ErrorView extends StatelessWidget {
-  final String message;
-  final VoidCallback? onRetry;
-  final IconData icon;
-
-  const ErrorView({
-    Key? key,
-    required this.message,
-    this.onRetry,
-    this.icon = Icons.error_outline,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 64,
-              color: Theme.of(context).colorScheme.error,
-            ),
-            const SizedBox(height: 16),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.titleMedium,
-              textAlign: TextAlign.center,
-            ),
-            if (onRetry != null) ...[
-              const SizedBox(height: 16),
-              ElevatedButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
-                label: const Text('Retry'),
-              ),
-            ],
-          ],
-        ),
+  static Future<T?> show<T>({
+    required BuildContext context,
+    required String title,
+    required List<Widget> children,
+    VoidCallback? onClose,
+    Widget? action,
+    double initialChildSize = 0.9,
+    double minChildSize = 0.5,
+    double maxChildSize = 0.95,
+    bool isDismissible = true,
+    bool enableDrag = true,
+    Color? backgroundColor,
+    BorderRadius? borderRadius,
+  }) {
+    return showModalBottomSheet<T>(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: isDismissible,
+      enableDrag: enableDrag,
+      backgroundColor: Colors.transparent,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: initialChildSize,
+        minChildSize: minChildSize,
+        maxChildSize: maxChildSize,
+        builder: (context, scrollController) {
+          return CustomBottomSheet(
+            title: title,
+            children: children,
+            onClose: onClose ?? () => Navigator.pop(context),
+            action: action,
+            backgroundColor: backgroundColor,
+            borderRadius: borderRadius,
+          );
+        },
       ),
     );
   }
 }
+
+// Example usage:
+/*
+// Simple usage
+CustomBottomSheet.show(
+  context: context,
+  title: 'Bottom Sheet Title',
+  children: [
+    ListTile(
+      title: Text('Item 1'),
+      onTap: () {
+        // Handle tap
+        Navigator.pop(context);
+      },
+    ),
+    ListTile(
+      title: Text('Item 2'),
+      onTap: () {
+        // Handle tap
+        Navigator.pop(context);
+      },
+    ),
+  ],
+);
+
+// Advanced usage
+CustomBottomSheet.show(
+  context: context,
+  title: 'Settings',
+  action: IconButton(
+    icon: Icon(Icons.save),
+    onPressed: () {
+      // Handle save
+      Navigator.pop(context);
+    },
+  ),
+  initialChildSize: 0.7,
+  minChildSize: 0.4,
+  maxChildSize: 0.9,
+  backgroundColor: Theme.of(context).cardColor,
+  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+  children: [
+    // Your settings widgets here
+  ],
+);
+
+// With custom content
+CustomBottomSheet.show(
+  context: context,
+  title: 'Custom Content',
+  children: [
+    Container(
+      padding: EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Heading',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Description text goes here. This can be a longer piece of content '
+            'that explains something in detail.',
+          ),
+          SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              // Handle button press
+              Navigator.pop(context);
+            },
+            child: Text('Action Button'),
+          ),
+        ],
+      ),
+    ),
+  ],
+);
+*/
