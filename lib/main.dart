@@ -3,8 +3,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'screens/main_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'utils/supabase_config.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'services/notification_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize timezone
+  tz.initializeTimeZones();
+  
+  // Initialize Supabase
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
+  
+  // Initialize notifications
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  
   runApp(const MyApp());
 }
 

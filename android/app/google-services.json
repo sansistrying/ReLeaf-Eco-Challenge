@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "568464388169",
+    "project_id": "releaf-e876c",
+    "storage_bucket": "releaf-e876c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:568464388169:android:5b1ed14882003e3b8e0f98",
+        "android_client_info": {
+          "package_name": "com.example.releaf"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "568464388169-9u7orah7a7l0h0d8q41h8ab22qtvbtoh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDXb1BYAp2uCa46PV0XQStld7hPSyR506Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "568464388169-9u7orah7a7l0h0d8q41h8ab22qtvbtoh.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "568464388169-2ecrcqol0spfprehjit64la76hsvebt6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.releaf"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
