@@ -20,6 +20,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   bool _isLoading = true;
   late ScrollController _scrollController;
+  // ignore: unused_field
   double _scrollOffset = 0;
 
   @override
@@ -85,45 +86,37 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingActionButton(),
+      // floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 60,
       floating: false,
       pinned: true,
       stretch: true,
       backgroundColor: Theme.of(context).colorScheme.primary,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
-          _scrollOffset > 130 ? 'ReLeaf' : '',
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: Colors.white,
-                fontSize: 20,
-              ),
+        title: const Text(
+          'ReLeaf',  // Always show ReLeaf
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              'assets/images/nature_background.jpg',
-              fit: BoxFit.cover,
+        background: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Theme.of(context).colorScheme.primary,  // Start with primary color
+                Theme.of(context).colorScheme.primary.withAlpha(178),
+              ],
             ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Theme.of(context).colorScheme.primary.withAlpha(178),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
       actions: [
@@ -142,7 +135,6 @@ class _HomeScreenState extends State<HomeScreen> {
       ],
     );
   }
-
   Widget _buildWelcomeSection() {
     if (_isLoading) {
       return _buildShimmerLoading();
@@ -411,13 +403,13 @@ class _HomeScreenState extends State<HomeScreen> {
         .shimmer(duration: const Duration(seconds: 1));
   }
 
-  Widget _buildFloatingActionButton() {
-    return FloatingActionButton.extended(
-      onPressed: () {
-        // Implement quick action
-      },
-      icon: const Icon(Icons.add_photo_alternate),
-      label: const Text('Quick Action'),
-    ).animate().scale(delay: const Duration(milliseconds: 500));
-  }
+  // Widget _buildFloatingActionButton() {
+  //   return FloatingActionButton.extended(
+  //     onPressed: () {
+  //       // Implement quick action
+  //     },
+  //     icon: const Icon(Icons.add_photo_alternate),
+  //     label: const Text('Quick Action'),
+  //   ).animate().scale(delay: const Duration(milliseconds: 500));
+  // }
 }

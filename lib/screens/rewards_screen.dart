@@ -98,47 +98,36 @@ class _RewardsScreenState extends State<RewardsScreen> {
 
   Widget _buildAppBar(BuildContext context) {
     return SliverAppBar(
-      expandedHeight: 200,
-      floating: false,
+      floating: true,
       pinned: true,
+      expandedHeight: 60,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      centerTitle: true,
       flexibleSpace: FlexibleSpaceBar(
-        title: Text(
+        title: const Text(
           'Rewards',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: Colors.white,
-              ),
-        ),
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              'assets/images/rewards_background.jpg',
-              fit: BoxFit.cover,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Theme.of(context).colorScheme.primary.withAlpha(204),
-                  ],
-                ),
-              ),
-            ),
-          ],
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.filter_list),
+          icon: const Icon(
+            Icons.filter_list,
+            color: Colors.white,
+          ),
           onPressed: () {
             _showFilterDialog(context);
           },
         ),
         IconButton(
-          icon: const Icon(Icons.search),
+          icon: const Icon(
+            Icons.search,
+            color: Colors.white,
+          ),
           onPressed: () {
             _showSearchDialog(context);
           },

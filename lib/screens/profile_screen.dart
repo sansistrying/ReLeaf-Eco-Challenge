@@ -57,48 +57,44 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildAppBar(BuildContext context) {
-    return SliverAppBar(
-      expandedHeight: 200,
-      pinned: true,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Stack(
-          fit: StackFit.expand,
-          children: [
-            Image.asset(
-              'assets/images/profile_background.jpg',
-              fit: BoxFit.cover,
-            ),
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Theme.of(context).colorScheme.surface,
-                  ],
-                ),
-              ),
-            ),
-          ],
+  return SliverAppBar(
+    floating: true,
+    pinned: true,
+    expandedHeight: 60,
+    backgroundColor: Theme.of(context).colorScheme.primary,
+    centerTitle: true,
+    flexibleSpace: FlexibleSpaceBar(
+      title: const Text(
+        'Profile',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.bold
         ),
       ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.settings),
-          onPressed: () {
-            // Implement settings
-          },
+    ),
+    actions: [
+      IconButton(
+        icon: const Icon(
+          Icons.settings,
+          color: Colors.white,
         ),
-        IconButton(
-          icon: const Icon(Icons.edit),
-          onPressed: () {
-            // Implement profile editing
-          },
+        onPressed: () {
+          // Implement settings
+        },
+      ),
+      IconButton(
+        icon: const Icon(
+          Icons.edit,
+          color: Colors.white,
         ),
-      ],
-    );
-  }
+        onPressed: () {
+          // Implement profile editing
+        },
+      ),
+    ],
+  );
+}
 
   Widget _buildProfileContent(BuildContext context) {
     return Column(

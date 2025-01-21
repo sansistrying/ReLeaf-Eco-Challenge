@@ -27,6 +27,7 @@ dependencies:
   
   # Camera and Image
   camera: ^0.10.5+2
+  camera_web: ^0.3.2+3
   image_picker: ^0.8.7+5
   image_cropper: ^4.0.1
   path_provider: ^2.0.15
@@ -52,6 +53,7 @@ dependencies:
   http: ^0.13.6
   shared_preferences: ^2.1.1
   uuid: ^3.0.7
+  timeago: ^3.6.0
 
 dev_dependencies:
   flutter_test:
