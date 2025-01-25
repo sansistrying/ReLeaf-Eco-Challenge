@@ -4,6 +4,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../widgets/achievement_card.dart';
 import '../models/achievement.dart';
 import '../widgets/animated_progress_bar.dart';
+import '../widgets/post_card.dart';
+import '../models/post.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -48,7 +50,25 @@ class _ProfileScreenState extends State<ProfileScreen>
           slivers: [
             _buildAppBar(context),
             SliverToBoxAdapter(
-              child: _buildProfileContent(context),
+              child: Column(
+                children: [
+                  _buildProfileHeader(context),
+                  const SizedBox(height: 16),
+                  _buildLevelProgress(context),
+                  const SizedBox(height: 24),
+                  _buildTabBar(context),
+                ],
+              ),
+            ),
+            SliverFillRemaining(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildAchievementsTab(),
+                  _buildActivityTab(),
+                  _buildPostsTab(),
+                ],
+              ),
             ),
           ],
         ),
@@ -57,54 +77,41 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Widget _buildAppBar(BuildContext context) {
-  return SliverAppBar(
-    floating: true,
-    pinned: true,
-    expandedHeight: 60,
-    backgroundColor: Theme.of(context).colorScheme.primary,
-    centerTitle: true,
-    flexibleSpace: FlexibleSpaceBar(
-      title: const Text(
-        'Profile',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 20,
-          fontWeight: FontWeight.bold
+    return SliverAppBar(
+      floating: true,
+      pinned: true,
+      expandedHeight: 60,
+      backgroundColor: Theme.of(context).colorScheme.primary,
+      centerTitle: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'Profile',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold
+          ),
         ),
       ),
-    ),
-    actions: [
-      IconButton(
-        icon: const Icon(
-          Icons.settings,
-          color: Colors.white,
+      actions: [
+        IconButton(
+          icon: const Icon(
+            Icons.settings,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            // Implement settings
+          },
         ),
-        onPressed: () {
-          // Implement settings
-        },
-      ),
-      IconButton(
-        icon: const Icon(
-          Icons.edit,
-          color: Colors.white,
+        IconButton(
+          icon: const Icon(
+            Icons.edit,
+            color: Colors.white,
+          ),
+          onPressed: () {
+            // Implement profile editing
+          },
         ),
-        onPressed: () {
-          // Implement profile editing
-        },
-      ),
-    ],
-  );
-}
-
-  Widget _buildProfileContent(BuildContext context) {
-    return Column(
-      children: [
-        _buildProfileHeader(context),
-        const SizedBox(height: 16),
-        _buildLevelProgress(context),
-        const SizedBox(height: 24),
-        _buildTabBar(context),
-        _buildTabContent(context),
       ],
     );
   }
@@ -244,25 +251,11 @@ class _ProfileScreenState extends State<ProfileScreen>
       tabs: const [
         Tab(text: 'Achievements'),
         Tab(text: 'Activity'),
-        Tab(text: 'Rewards'),
+        Tab(text: 'Posts'),
       ],
       indicatorColor: Theme.of(context).colorScheme.primary,
       labelColor: Theme.of(context).colorScheme.primary,
       unselectedLabelColor: Theme.of(context).colorScheme.onSurface,
-    );
-  }
-
-  Widget _buildTabContent(BuildContext context) {
-    return SizedBox(
-      height: 500,
-      child: TabBarView(
-        controller: _tabController,
-        children: [
-          _buildAchievementsTab(),
-          _buildActivityTab(),
-          _buildRewardsTab(),
-        ],
-      ),
     );
   }
 
@@ -289,14 +282,17 @@ class _ProfileScreenState extends State<ProfileScreen>
       ),
     ];
 
-    return ListView.builder(
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: achievements.length,
-      itemBuilder: (context, index) {
-        return AchievementCard(
-          achievement: achievements[index],
-        ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
-      },
+      child: Column(
+        children: achievements.map((achievement) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: AchievementCard(
+            achievement: achievement,
+          ).animate().fadeIn(),
+        )).toList(),
+      ),
     );
   }
 
@@ -305,94 +301,94 @@ class _ProfileScreenState extends State<ProfileScreen>
       return _buildShimmerLoading();
     }
 
-    return ListView.builder(
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      itemCount: 10,
-      itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.only(bottom: 8),
-          child: ListTile(
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer,
-                shape: BoxShape.circle,
+      child: Column(
+        children: List.generate(10, (index) => Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Card(
+            child: ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.eco,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
-              child: Icon(
-                Icons.eco,
-                color: Theme.of(context).colorScheme.primary,
+              title: const Text('Planted a tree'),
+              subtitle: const Text('2 days ago'),
+              trailing: Text(
+                '+100 pts',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
-            title: const Text('Planted a tree'),
-            subtitle: const Text('2 days ago'),
-            trailing: Text(
-              '+100 pts',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
-      },
+          ).animate().fadeIn(delay: Duration(milliseconds: 100 * index)),
+        )).toList(),
+      ),
     );
   }
 
-  Widget _buildRewardsTab() {
+  Widget _buildPostsTab() {
     if (_isLoading) {
       return _buildShimmerLoading();
     }
 
-    return GridView.builder(
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.8,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
+      child: Column(
+        children: _getDummyPosts().map((post) => Padding(
+          padding: const EdgeInsets.only(bottom: 16),
+          child: PostCard(
+            post: post,
+            onLike: () {},
+            onComment: () {},
+            onShare: () {},
+          ).animate().fadeIn(),
+        )).toList(),
       ),
-      itemCount: 6,
-      itemBuilder: (context, index) {
-        return Card(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Container(
-                  decoration: BoxDecoration(
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(12),
-                    ),
-                    image: DecorationImage(
-                      image: AssetImage('assets/images/reward_$index.jpg'),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Eco Reward ${index + 1}',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    Text(
-                      '500 points',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
-      },
     );
+  }
+
+  List<Post> _getDummyPosts() {
+    return [
+      Post(
+        id: '1',
+        userId: 'user123',
+        userName: 'John Doe',
+        userAvatar: 'assets/images/profile_picture.jpg',
+        imageUrl: 'assets/images/post1.jpg',
+        description: 'Just planted my first tree! 🌳 #SaveTheEarth',
+        actionType: 'Plant a Tree',
+        points: 100,
+        likes: 24,
+        comments: 5,
+        createdAt: DateTime.now().subtract(const Duration(days: 2)),
+        isLiked: false,
+      ),
+      Post(
+        id: '2',
+        userId: 'user123',
+        userName: 'John Doe',
+        userAvatar: 'assets/images/profile_picture.jpg',
+        imageUrl: 'assets/images/post2.jpg',
+        description: 'Recycled all my electronics today! ♻️ #Sustainability',
+        actionType: 'Recycle Electronics',
+        points: 50,
+        likes: 15,
+        comments: 3,
+        createdAt: DateTime.now().subtract(const Duration(days: 5)),
+        isLiked: true,
+      ),
+    ];
   }
 
   Widget _buildShimmerLoading() {

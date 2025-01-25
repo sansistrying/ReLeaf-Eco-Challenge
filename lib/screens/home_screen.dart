@@ -17,15 +17,16 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late TabController _leaderboardTabController;
   bool _isLoading = true;
   late ScrollController _scrollController;
-  // ignore: unused_field
   double _scrollOffset = 0;
 
   @override
   void initState() {
     super.initState();
+    _leaderboardTabController = TabController(length: 2, vsync: this);
     _scrollController = ScrollController()
       ..addListener(() {
         setState(() {
@@ -46,6 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _leaderboardTabController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -67,26 +69,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildWelcomeSection(),
+                    const SizedBox(height: 16),
+                    _buildCompactPointsDisplay(),
+                    const SizedBox(height: 16),
+                    _buildWeeklyChallenges(),
                     const SizedBox(height: 24),
-                    _buildDailyProgress(),
-                    const SizedBox(height: 24),
-                    _buildCurrentChallenge(),
+                    _buildEcoActionsList(),
                     const SizedBox(height: 24),
                     _buildImpactStats(context),
                     const SizedBox(height: 24),
-                    _buildEcoActionsSection(),
-                    const SizedBox(height: 24),
                     _buildLeaderboardSection(),
                   ].animate(interval: const Duration(milliseconds: 100))
-                      .fadeIn()
-                      .slideX(),
+                    .fadeIn()
+                    .slideX(),
                 ),
               ),
             ),
           ],
         ),
       ),
-      // floatingActionButton: _buildFloatingActionButton(),
     );
   }
 
@@ -99,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Theme.of(context).colorScheme.primary,
       flexibleSpace: FlexibleSpaceBar(
         title: const Text(
-          'ReLeaf',  // Always show ReLeaf
+          'ReLeaf',
           style: TextStyle(
             color: Colors.white,
             fontSize: 20,
@@ -112,7 +113,7 @@ class _HomeScreenState extends State<HomeScreen> {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Theme.of(context).colorScheme.primary,  // Start with primary color
+                Theme.of(context).colorScheme.primary,
                 Theme.of(context).colorScheme.primary.withAlpha(178),
               ],
             ),
@@ -121,24 +122,20 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_outlined),
-          onPressed: () {
-            // Implement notifications
-          },
+          icon: const Icon(Icons.notifications_outlined, color: Colors.white),
+          onPressed: () {},
         ),
         IconButton(
-          icon: const Icon(Icons.search),
-          onPressed: () {
-            // Implement search
-          },
+          icon: const Icon(Icons.search, color: Colors.white),
+          onPressed: () {},
         ),
       ],
     );
   }
+
   Widget _buildWelcomeSection() {
-    if (_isLoading) {
-      return _buildShimmerLoading();
-    }
+    if (_isLoading) return _buildShimmerLoading();
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -149,35 +146,34 @@ class _HomeScreenState extends State<HomeScreen> {
         Text(
           DateFormat('EEEE, MMMM d').format(DateTime.now()),
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(153),
-              ),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildDailyProgress() {
+  Widget _buildCompactPointsDisplay() {
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
-            Text(
-              'Daily Progress',
-              style: Theme.of(context).textTheme.titleLarge,
+            Icon(
+              Icons.stars,
+              color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(height: 16),
-            AnimatedProgressBar(
-              progress: 0.7,
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              foregroundColor: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(height: 8),
+            const SizedBox(width: 8),
             Text(
-              '70% of daily goal completed',
+              '1,500 Points',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '500 until next level',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
@@ -186,80 +182,29 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildCurrentChallenge() {
-    return ChallengeCard(
-      title: 'Weekly Challenge',
-      description: 'Plant 3 trees this week',
-      progress: 0.33,
-      daysLeft: 4,
-      reward: '500 points',
-      onTap: () {
-        // Implement challenge details
-      },
-    );
-  }
-
-  Widget _buildImpactStats(BuildContext context) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      mainAxisSpacing: 8,
-      crossAxisSpacing: 8,
-      children: [
-        StatsCard(
-          title: 'Carbon Offset',
-          value: '2,500 kg',
-          icon: Icons.eco,
-          color: Colors.green,
-        ),
-        StatsCard(
-          title: 'Trees Planted',
-          value: '150',
-          icon: Icons.park,
-          color: Colors.brown,
-        ),
-        StatsCard(
-          title: 'Total Points',
-          value: '5,000',
-          icon: Icons.stars,
-          color: Colors.amber,
-          isWide: true,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildEcoActionsSection() {
-    if (_isLoading) {
-      return _buildShimmerLoading();
-    }
+  Widget _buildWeeklyChallenges() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Today\'s Eco Actions',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            TextButton(
-              onPressed: () {
-                // Implement view all actions
-              },
-              child: const Text('View All'),
-            ),
-          ],
+        Text(
+          'Weekly Challenges',
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(height: 16),
-        _buildEcoActions(),
+        const SizedBox(height: 12),
+        ChallengeCard(
+          title: 'Plant Trees Challenge',
+          description: 'Plant 3 trees this week',
+          progress: 0.33,
+          daysLeft: 4,
+          reward: '500 points',
+          onTap: () {},
+        ),
       ],
     );
   }
 
-  Widget _buildEcoActions() {
-    final List<EcoAction> actions = [
+  Widget _buildEcoActionsList() {
+    final actions = [
       EcoAction(
         id: '1',
         title: 'Plant a Tree',
@@ -267,7 +212,6 @@ class _HomeScreenState extends State<HomeScreen> {
         points: 100,
         icon: Icons.nature,
         category: 'Planting',
-        difficulty: 2,
       ),
       EcoAction(
         id: '2',
@@ -276,7 +220,6 @@ class _HomeScreenState extends State<HomeScreen> {
         points: 50,
         icon: Icons.phone_android,
         category: 'Recycling',
-        difficulty: 1,
       ),
       EcoAction(
         id: '3',
@@ -285,46 +228,133 @@ class _HomeScreenState extends State<HomeScreen> {
         points: 30,
         icon: Icons.directions_bus,
         category: 'Transportation',
-        difficulty: 1,
       ),
     ];
 
-    return ListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: actions.length,
-      itemBuilder: (context, index) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: EcoActionCard(
-            action: actions[index],
-            onTap: () {
-              // Implement action details
-            },
+    return Container(
+      margin: EdgeInsets.zero,
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            'This Week\'s Eco Actions',
+            style: Theme.of(context).textTheme.titleLarge,
           ),
-        ).animate().fadeIn(delay: Duration(milliseconds: 100 * index));
-      },
+          const SizedBox(height: 8),
+          ...actions.map((action) => Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: EcoActionCard(
+              action: action,
+              onTap: () {},
+            ),
+          )).toList(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildImpactStats(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your Impact',
+          style: Theme.of(context).textTheme.titleLarge,
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: StatsCard(
+                title: 'Carbon Offset',
+                value: '2,500 kg',
+                icon: Icons.eco,
+                color: Colors.green,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: StatsCard(
+                title: 'Trees Planted',
+                value: '150',
+                icon: Icons.park,
+                color: Colors.brown,
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
   Widget _buildLeaderboardSection() {
-    if (_isLoading) {
-      return _buildShimmerLoading();
-    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Leaderboard',
-          style: Theme.of(context).textTheme.headlineSmall,
+          style: Theme.of(context).textTheme.titleLarge,
         ),
-        const SizedBox(height: 16),
-        LeaderboardCard(topUsers: _getDummyUsers()),
+        const SizedBox(height: 12),
+        Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: [
+              TabBar(
+                controller: _leaderboardTabController,
+                tabs: const [
+                  Tab(text: 'Friends'),
+                  Tab(text: 'Global'),
+                ],
+              ),
+              SizedBox(
+                height: 200,
+                child: TabBarView(
+                  controller: _leaderboardTabController,
+                  children: [
+                    _buildLeaderboardList(isFriends: true),
+                    _buildLeaderboardList(isFriends: false),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  List<User> _getDummyUsers() {
+  Widget _buildLeaderboardList({required bool isFriends}) {
+    final users = isFriends ? _getDummyFriends() : _getDummyGlobalUsers();
+    
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: users.length,
+      itemBuilder: (context, index) {
+        final user = users[index];
+        return ListTile(
+          leading: CircleAvatar(
+            backgroundImage: AssetImage(user.avatar),
+          ),
+          title: Text(user.name),
+          trailing: Text(
+            '${user.points} pts',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<User> _getDummyFriends() {
     return [
       User(
         id: '1',
@@ -339,38 +369,30 @@ class _HomeScreenState extends State<HomeScreen> {
           title: 'Eco Warrior',
         ),
         preferences: const UserPreferences(),
-        joinDate: DateTime.now().subtract(const Duration(days: 100)),
+        joinDate: DateTime.now(),
       ),
+      // Add more friends...
+    ];
+  }
+
+  List<User> _getDummyGlobalUsers() {
+    return [
       User(
         id: '2',
         name: 'Bob Smith',
         email: 'bob@example.com',
-        points: 1100,
+        points: 2000,
         avatar: 'assets/images/avatar2.png',
         level: UserLevel(
-          level: 4,
-          currentXP: 300,
+          level: 7,
+          currentXP: 800,
           requiredXP: 1000,
           title: 'Nature Guardian',
         ),
         preferences: const UserPreferences(),
-        joinDate: DateTime.now().subtract(const Duration(days: 90)),
+        joinDate: DateTime.now(),
       ),
-      User(
-        id: '3',
-        name: 'Charlie Brown',
-        email: 'charlie@example.com',
-        points: 1000,
-        avatar: 'assets/images/avatar3.png',
-        level: UserLevel(
-          level: 4,
-          currentXP: 200,
-          requiredXP: 1000,
-          title: 'Earth Protector',
-        ),
-        preferences: const UserPreferences(),
-        joinDate: DateTime.now().subtract(const Duration(days: 80)),
-      ),
+      // Add more global users...
     ];
   }
 
@@ -402,14 +424,4 @@ class _HomeScreenState extends State<HomeScreen> {
     ).animate(onPlay: (controller) => controller.repeat())
         .shimmer(duration: const Duration(seconds: 1));
   }
-
-  // Widget _buildFloatingActionButton() {
-  //   return FloatingActionButton.extended(
-  //     onPressed: () {
-  //       // Implement quick action
-  //     },
-  //     icon: const Icon(Icons.add_photo_alternate),
-  //     label: const Text('Quick Action'),
-  //   ).animate().scale(delay: const Duration(milliseconds: 500));
-  // }
 }
