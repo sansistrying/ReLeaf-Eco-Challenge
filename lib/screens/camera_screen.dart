@@ -15,11 +15,9 @@ class CameraScreen extends StatefulWidget {
 class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver {
   CameraController? _controller;
   bool _isCameraInitialized = false;
-  bool _isRearCameraSelected = true;
+  bool _isRearCameraSelected = false; // Front camera by default
   double _currentZoomLevel = 1.0;
-  double _baseZoomLevel = 1.0;
   final Logger _logger = Logger('CameraScreen');
-  bool _hasPermission = false;
   bool _isFlashOn = false;
   final double _minZoomLevel = 1.0;
   final double _maxZoomLevel = 5.0;
@@ -36,16 +34,33 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
         _logger.warning('No cameras available');
-        setState(() => _hasPermission = false);
         return;
       }
 
-      setState(() => _hasPermission = true);
-      await onNewCameraSelected(cameras);
+      // Find front camera
+      final frontCamera = cameras.firstWhere(
+        (camera) => camera.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      final CameraController cameraController = CameraController(
+        frontCamera,
+        ResolutionPreset.max,
+        enableAudio: false,
+      );
+
+      await cameraController.initialize();
+      await cameraController.setFlashMode(FlashMode.off);
+      
+      // Get min and max zoom levels
+      if (mounted) {
+        setState(() {
+          _controller = cameraController;
+          _isCameraInitialized = true;
+        });
+      }
     } catch (e) {
       _logger.severe('Error initializing camera: $e');
-      setState(() => _hasPermission = false);
-      _showErrorDialog('Camera Error', 'Failed to initialize camera');
     }
   }
 
@@ -71,57 +86,8 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
     }
   }
 
-  Future<void> onNewCameraSelected(List<CameraDescription> cameras) async {
-    final CameraController? oldController = _controller;
-    if (oldController != null) {
-      _controller = null;
-      await oldController.dispose();
-    }
-
-    final CameraController newController = CameraController(
-      _isRearCameraSelected ? cameras.first : cameras.last,
-      ResolutionPreset.max,
-      imageFormatGroup: ImageFormatGroup.jpeg,
-      enableAudio: false,
-    );
-
-    try {
-      await newController.initialize();
-      await newController.setFlashMode(FlashMode.off);
-      await newController.setZoomLevel(_currentZoomLevel);
-
-      setState(() {
-        _controller = newController;
-        _isCameraInitialized = true;
-      });
-    } on CameraException catch (e) {
-      _logger.severe('Error initializing camera: $e');
-      _showErrorDialog('Camera Error', 'Failed to initialize camera');
-    }
-  }
-
-  void _showErrorDialog(String title, String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(title),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    if (!_hasPermission) {
-      return _buildPermissionDeniedUI();
-    }
-
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -129,40 +95,7 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
           children: [
             _buildCameraPreview(),
             _buildOverlayControls(),
-            _buildZoomControl(),
             _buildCameraControls(),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPermissionDeniedUI() {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.no_photography, size: 64),
-            const SizedBox(height: 16),
-            const Text(
-              'Camera Access Required',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              'Please enable camera access to continue',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: _initializeCamera,
-              icon: const Icon(Icons.refresh),
-              label: const Text('Try Again'),
-            ),
           ],
         ),
       ),
@@ -178,21 +111,7 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
       );
     }
 
-    return GestureDetector(
-      onScaleStart: (details) {
-        _baseZoomLevel = _currentZoomLevel;
-      },
-      onScaleUpdate: (details) {
-        if (_controller == null) return;
-
-        setState(() {
-          _currentZoomLevel = (_baseZoomLevel * details.scale)
-              .clamp(_minZoomLevel, _maxZoomLevel);
-          _controller!.setZoomLevel(_currentZoomLevel);
-        });
-      },
-      child: CameraPreview(_controller!),
-    );
+    return CameraPreview(_controller!);
   }
 
   Widget _buildOverlayControls() {
@@ -217,53 +136,18 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
               );
             },
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(20),
+          IconButton(
+            icon: Icon(
+              _isRearCameraSelected ? Icons.camera_front : Icons.camera_rear,
+              color: Colors.white,
+              size: 28,
             ),
-            child: Text(
-              '${_currentZoomLevel.toStringAsFixed(1)}x',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildZoomControl() {
-    return Positioned(
-      right: 16,
-      top: MediaQuery.of(context).size.height * 0.2,
-      child: RotatedBox(
-        quarterTurns: 3,
-        child: Container(
-          width: 200,
-          height: 50,
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(25),
-          ),
-          child: Slider(
-            value: _currentZoomLevel,
-            min: _minZoomLevel,
-            max: _maxZoomLevel,
-            activeColor: Colors.white,
-            inactiveColor: Colors.white30,
-            onChanged: (value) {
-              if (_controller == null) return;
-              setState(() {
-                _currentZoomLevel = value;
-                _controller!.setZoomLevel(value);
-              });
+            onPressed: () async {
+              setState(() => _isRearCameraSelected = !_isRearCameraSelected);
+              await _initializeCamera();
             },
           ),
-        ),
+        ],
       ),
     );
   }
@@ -308,20 +192,7 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
                 ),
               ),
             ),
-            IconButton(
-              icon: Icon(
-                _isRearCameraSelected
-                    ? Icons.camera_front
-                    : Icons.camera_rear,
-                color: Colors.white,
-                size: 32,
-              ),
-              onPressed: () async {
-                setState(() => _isRearCameraSelected = !_isRearCameraSelected);
-                final cameras = await availableCameras();
-                await onNewCameraSelected(cameras);
-              },
-            ),
+            const SizedBox(width: 64), // Placeholder for symmetry
           ],
         ),
       ),
@@ -351,9 +222,25 @@ class CameraScreenState extends State<CameraScreen> with WidgetsBindingObserver 
           ),
         ),
       );
-    } on CameraException catch (e) {
+    } catch (e) {
       _logger.severe('Error taking picture: $e');
       _showErrorDialog('Camera Error', 'Failed to capture image');
     }
+  }
+
+  void _showErrorDialog(String title, String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -3,10 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'utils/supabase_config.dart';
 import 'screens/main_screen.dart';
+import 'package:camera/camera.dart';
+
+late List<CameraDescription> cameras;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+  try {
+    cameras = await availableCameras();
+  } on CameraException catch (e) {
+    debugPrint('Error initializing cameras: $e');
+    cameras = [];
+  }
   await Supabase.initialize(
     url: supabaseUrl,
     anonKey: supabaseAnonKey,
