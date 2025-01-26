@@ -2,7 +2,6 @@ name: releaf
 description: An innovative mobile app that transforms sustainability into a fun, rewarding, and socially engaging experience.
 
 publish_to: 'none'
-
 version: 1.0.0+1
 
 environment:
@@ -11,47 +10,66 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  
+  # Core
   cupertino_icons: ^1.0.2
+  
+  # Supabase
+  supabase_flutter: ^1.10.25
+  
+  # UI and Design
   google_fonts: ^4.0.3
   flutter_animate: ^4.1.1+1
+  flutter_svg: ^2.0.5
+  lottie: ^2.3.2
+  shimmer: ^2.0.0
+  flutter_staggered_grid_view: ^0.6.2
+  
+  # Camera and Image
   camera: ^0.10.5+2
+  camera_web: ^0.3.2+3
+  image_picker: ^0.8.7+5
+  image_cropper: ^4.0.1
   path_provider: ^2.0.15
   path: ^1.8.3
+  
+  # State Management
   provider: ^6.0.5
-  shared_preferences: ^2.1.1
-  http: ^0.13.6
-  intl: ^0.18.1
-  flutter_svg: ^2.0.5
-  image_picker: ^0.8.7+5
-  url_launcher: ^6.1.11
-  flutter_local_notifications: ^14.1.1
+  
+  # Location and Maps
   geolocator: ^9.0.2
   flutter_map: ^4.0.0
   latlong2: ^0.8.2
+  
+  # Notifications
+  flutter_local_notifications: ^14.1.1
+  timezone: ^0.9.2
+  
+  # Utils
+  intl: ^0.18.1
+  url_launcher: ^6.1.11
   logging: ^1.1.0
-  lottie: ^2.3.2
-  flutter_riverpod: ^2.3.0
-  image_cropper: ^4.0.1
-  logger: ^1.3.0
-  dio: ^5.0.0
-  firebase_auth: ^4.2.0
-  google_sign_in: ^6.0.0
-  firebase_analytics: ^10.1.0
-  timezone: ^0.9.1
-  flutter_staggered_grid_view: ^0.6.2
-  shimmer: ^2.0.0
+  logger: ^1.4.0
+  http: ^0.13.6
+  shared_preferences: ^2.1.1
+  uuid: ^3.0.7
+  timeago: ^3.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.1
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.3.2
 
+# Flutter app configuration
 flutter:
   uses-material-design: true
 
   assets:
     - assets/images/
     - assets/icons/
+    - assets/animations/
 
   fonts:
     - family: Poppins
@@ -63,8 +81,24 @@ flutter:
           weight: 600
         - asset: assets/fonts/Poppins-Bold.ttf
           weight: 700
-    - family: PlayfairDisplay
-      fonts:
-        - asset: assets/fonts/PlayfairDisplay-Regular.ttf
-        - asset: assets/fonts/PlayfairDisplay-Bold.ttf
-          weight: 700
+
+# App icon configuration
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/app_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/app_icon_foreground.png"
+
+# Splash screen configuration
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/images/splash.png
+  color_dark: "#000000"
+  image_dark: assets/images/splash_dark.png
+  android_12:
+    image: assets/images/splash_android12.png
+    icon_background_color: "#FFFFFF"
+    image_dark: assets/images/splash_android12_dark.png
+    icon_background_color_dark: "#000000"
